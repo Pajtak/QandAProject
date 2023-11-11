@@ -3,6 +3,7 @@ const app = express();
 const bodyParser = require("body-parser");
 const connection = require("./database/database");
 const questionModel = require("./database/questionModel");
+const answerModel = require("./database/answerModel");
 
 //Database
 
@@ -59,13 +60,30 @@ app.get("/questions/:id", (req, res) => {
     })
     .then((question) => {
       if (question != undefined) {
-        res.render("question", {
-          question: question,
-        });
+        answerModel
+          .findAll({
+            where: { questionId: question.id },
+            order: [["id", "DESC"]],
+          })
+          .then((answer) => {
+            res.render("question", {
+              question: question,
+              answer: answer,
+            });
+          });
       } else {
         res.redirect("/");
       }
     });
+});
+
+app.post("/answer", (req, res) => {
+  let body = req.body.answerBody;
+  let questionId = req.body.answer;
+
+  answerModel.create({ body: body, questionId: questionId }).then(() => {
+    res.redirect(`/questions/${questionId}`);
+  });
 });
 app.listen(8080, () => {
   console.log("App rodando");
